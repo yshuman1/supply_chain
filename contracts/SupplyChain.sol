@@ -101,7 +101,7 @@ contract SupplyChain {
       public sold(_sku) verifyCaller(items[_sku].seller)
     {
         items[_sku].state = State.Shipped;
-        emit Sold(_sku);
+        emit Shipped(_sku);
     }
 
   /* Add 2 modifiers to check if the item is shipped already, and that the person calling this function
