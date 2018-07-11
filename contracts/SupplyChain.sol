@@ -10,7 +10,7 @@ contract SupplyChain {
   /* Add a line that creates a public mapping that maps the SKU (a number) to an Item.
      Call this mappings items
   */
-    mapping(uint => item) Item;
+    mapping(uint => Item) items;
   /* Add a line that creates an enum called State. This should have 4 states
     ForSale
     Sold
@@ -18,7 +18,7 @@ contract SupplyChain {
     Received
     (declaring them in this order is important for testing)
   */
-    enum State { ForSale, Sold, Shipped, Received}
+    enum State {ForSale, Sold, Shipped, Received}
   /* Create a struct named Item.
     Here, add a name, sku, price, state, seller, and buyer
     We've left you to figure out what the appropriate types are,
@@ -28,7 +28,7 @@ contract SupplyChain {
         string name;
         uint sku;
         uint price;
-        state State;
+        State state;
         address seller;
         address buyer;
     }
@@ -54,6 +54,7 @@ contract SupplyChain {
   /* For each of the following modifiers, use what you learned about modifiers
    to give them functionality. For example, the forSale modifier should require
    that the item with the given sku has the state ForSale. */
+
     modifier forSale(uint _sku) {require (items[_sku].state == State.ForSale); _;}
     modifier sold(uint _sku) {require (items[_sku].state == State.Sold); _;}
     modifier shipped(uint _sku) {require (items[_sku].state == State.Shipped); _;}
@@ -80,13 +81,23 @@ contract SupplyChain {
     if the buyer paid enough, and check the value after the function is called to make sure the buyer is
     refunded any excess ether sent. Remember to call the event associated with this function!*/
 
-    function buyItem(uint sku)
-      public payable forSale(_sku) paidEnough(_price) checkValue(_sku)
-    {}
+    function buyItem(uint _sku)
+      public
+      payable
+      forSale(_sku)
+      paidEnough(items[_sku].price)
+      checkValue(_sku)
+    {
+        items[_sku].seller.transfer(items[_sku].price);
+        items[_sku].buyer = msg.sender;
+        items[_sku].state = State.Sold;
+        emit Sold(_sku);
+    }
+
 
   /* Add 2 modifiers to check if the item is sold already, and that the person calling this function
   is the seller. Change the state of the item to shipped. Remember to call the event associated with this function!*/
-    function shipItem(uint sku)
+    function shipItem(uint _sku)
       public sold(_sku) verifyCaller(items[_sku].seller)
     {
         items[_sku].state = State.Shipped;
@@ -95,7 +106,7 @@ contract SupplyChain {
 
   /* Add 2 modifiers to check if the item is shipped already, and that the person calling this function
   is the buyer. Change the state of the item to received. Remember to call the event associated with this function!*/
-    function receiveItem(uint sku)
+    function receiveItem(uint _sku)
       public shipped(_sku) verifyCaller(items[_sku].buyer)
     {
         items[_sku].state = State.Received;
